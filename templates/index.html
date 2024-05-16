@@ -1,0 +1,38 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Covid Analysis</title>
+    <style>
+        body {
+            display: flex;
+        }
+
+        #sidebar {
+            width: 200px;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        #content {
+            flex: 1;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Navigation</h2>
+        <ul>
+            {% for page in pages %}
+                <li><a href="{{ page.url }}">{{ page.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div id="content">
+        <h1>Groundwater</h1>
+    </div>
+</body>
+</html>
