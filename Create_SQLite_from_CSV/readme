@@ -1,0 +1,4 @@
+# Navigation to link
+# Download Measurements, Stations and Perforations CSV's
+# Make sure that the Jupyter Notebook and CSV files are in the same directory
+# Run the script to create the database and view.  The last cell queries the view.
