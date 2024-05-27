@@ -14,14 +14,16 @@ pages = [
     {'name': 'Scatter Plot Query Groundwater View', 'url': '/Scatter_Plot_Groundwater_View_page'},
     {'name': 'Data_Overview', 'url': '/Data_Overview'},
     {'name': 'missing_values', 'url': '/missing_values'},
+    {'name': 'Dynamic Scatterplot', 'url': '/generate_scatterplot'},
+    {'name': 'Groundwater Maps', 'url': '/JavaScript'},
     {'name': 'Combined_Data_Dictionaries', 'url': '/Combined_Data_Dictionaries'}
 ]
 
-db_path = os.path.join('../Resources', 'Groundwater.db')
+db_path = os.path.join('Resources', 'Groundwater.db')
+#db_path = os.path.join('../Resources', 'Groundwater.db')
 
 def get_measurements_gwe_avg_percent_change_table():
     query = "SELECT * FROM measurements_gwe_avg_percent_change_table"
-    db_path = os.path.join('../Resources', 'Groundwater.db')
     conn = sqlite3.connect(db_path)
     df = pd.read_sql_query(query, conn)
     conn.close()
@@ -57,16 +59,21 @@ def get_missing_percent_change_gwe():
     return percent_change_gwe_percent_missing
 
 def query_vw_groundwater():
-    db_path = os.path.join('../Resources', 'Groundwater.db')
     conn = sqlite3.connect(db_path)
     query = "SELECT * FROM vw_groundwater"
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df
 
+def query_tbl_groundwater():
+    conn = sqlite3.connect('../Resources/Groundwater_Maps.db')
+    query = "SELECT * FROM tbl_groundwater WHERE year > 2013"
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df
+
 def data_dictionaries():
     # Connect to the SQLite database
-    db_path = os.path.join('../Resources', 'Groundwater.db')
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Combined_Data_Dictionaries ORDER BY tables;")
@@ -84,7 +91,8 @@ def index():
 @app.route('/JavaScript')
 def JavaScript():
     # Query the data from the database instead of reading from CSV
-    df = query_vw_groundwater()
+    #df = query_vw_groundwater()
+    df = query_tbl_groundwater()
     # Extract the year for each object from the DataFrame
     years = df['year']
     # Return the HTML template with the years parameter
@@ -194,6 +202,62 @@ def missing_values():
     return render_template('missing_values.html', 
                            missing_percent_change_gwe=str(int(missing_percent_change_gwe)) + '%', 
                            missing_Percent_well_use = str(int(missing_Percent_well_use)) + '%')
+
+
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+@app.route('/groundwater_scatter_plot')
+def groundwater_scatter_plot():
+    conn = get_db_connection()
+    tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+    conn.close()
+    tables = [table['name'] for table in tables]
+    return render_template('scatter_plot.html', tables=tables)
+
+@app.route('/get_columns', methods=['POST'])
+def get_columns():
+    table = request.form['table']
+    conn = get_db_connection()
+    columns = conn.execute(f"PRAGMA table_info({table});").fetchall()
+    conn.close()
+    columns = [column['name'] for column in columns]
+    return jsonify(columns)
+
+@app.route('/generate_scatterplot', methods=['POST'])
+def generate_scatterplot():
+    table = request.form['table']
+    column1 = request.form['column1']
+    column2 = request.form['column2']
+    
+    conn = get_db_connection()
+    data = conn.execute(f"SELECT {column1}, {column2} FROM {table}").fetchall()
+    conn.close()
+    
+    x = [row[column1] for row in data]
+    y = [row[column2] for row in data]
+    
+    plt.figure()
+    plt.scatter(x, y)
+    plt.xlabel(column1)
+    plt.ylabel(column2)
+    plt.title(f'Scatter Plot of {column1} vs {column2}')
+    
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plot_url = base64.b64encode(img.getvalue()).decode()
+    plt.close()
+    
+    return render_template('scatter_plot.html', plot_url=plot_url, tables=get_db_tables())
+
+def get_db_tables():
+    conn = get_db_connection()
+    tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+    conn.close()
+    return [table['name'] for table in tables]
 
 
 @app.errorhandler(404)
