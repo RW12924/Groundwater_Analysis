@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scatter Plot Groundwater View</title>
+    <style>
+        body {
+            display: flex;
+        }
+
+        #sidebar {
+            width: 200px;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        #content {
+            flex: 1;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Navigation</h2>
+        <ul>
+            {% for page in pages %}
+                <li><a href="{{ page.url }}">{{ page.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div id="content">
+        <h1>Scatter Plot Groundwater View</h1>
+        <form method="POST">
+            <label for="x_column">X Column:</label>
+            <input type="text" id="x_column" name="x_column">
+            <label for="y_column">Y Column:</label>
+            <input type="text" id="y_column" name="y_column">
+            <input type="submit" value="Generate Plot">
+        </form>
+        {% if plot %}
+            <h2>Scatter Plot of {{ x_column }} vs {{ y_column }}</h2>
+            <img src="data:image/png;base64,{{ plot }}" alt="Scatter Plot">
+        {% endif %}
+    </div>
+</body>
+</html>

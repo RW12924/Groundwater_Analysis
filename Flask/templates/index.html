@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groundwater Analysis</title>
+    <style>
+        body {
+            display: flex;
+        }
+
+        #sidebar {
+            width: 200px;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        #content {
+            flex: 1;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Navigation</h2>
+        <ul>
+            {% for page in pages %}
+                <li><a href="{{ page.url }}">{{ page.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div id="content">
+        <h1>Ground Water Elevation (GWE)</h1>
+        <p>This data comes from the California Department of Water Resources: see <a href="https://water.ca.gov/">https://water.ca.gov/</a></p>
+        <p>Ground Water Elevation (GWE) refers to the height of the water surface in a well, measured from a specific reference point, usually from the ground surface or a predetermined datum (ChatGPT).</p>
+    </div>
+</body>
+</html>

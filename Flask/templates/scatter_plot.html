@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Dynamic Scatter Plot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Dynamic Scatter Plot</h1>
+    
+    <label for="db-Tables">Select Table:</label>
+    <select id="db-Tables" name="table">
+        <option value="">Select a table</option>
+        {% for table in tables %}
+            <option value="{{ table }}">{{ table }}</option>
+        {% endfor %}
+    </select>
+    
+    <button id="get-columns">Get Columns</button>
+    
+    <br><br>
+    
+    <label for="column1">Select Column 1:</label>
+    <select id="column1" name="column1">
+        <option value="">Select a column</option>
+    </select>
+    
+    <label for="column2">Select Column 2:</label>
+    <select id="column2" name="column2">
+        <option value="">Select a column</option>
+    </select>
+    
+    <br><br>
+    
+    <button id="generate-plot">Generate Scatter Plot</button>
+    
+    <br><br>
+    
+    <div id="scatterplot">
+        {% if plot_url %}
+            <img src="data:image/png;base64,{{ plot_url }}">
+        {% endif %}
+    </div>
+    
+    <script>
+        $(document).ready(function(){
+            $('#get-columns').click(function(){
+                var table = $('#db-Tables').val();
+                if (table) {
+                    $.post('/get_columns', {table: table}, function(data){
+                        var columns = data;
+                        $('#column1').empty().append('<option value="">Select a column</option>');
+                        $('#column2').empty().append('<option value="">Select a column</option>');
+                        for (var i = 0; i < columns.length; i++) {
+                            $('#column1').append('<option value="'+columns[i]+'">'+columns[i]+'</option>');
+                            $('#column2').append('<option value="'+columns[i]+'">'+columns[i]+'</option>');
+                        }
+                    });
+                }
+            });
+            
+            $('#generate-plot').click(function(){
+                var table = $('#db-Tables').val();
+                var column1 = $('#column1').val();
+                var column2 = $('#column2').val();
+                if (table && column1 && column2) {
+                    $.post('/generate_scatterplot', {table: table, column1: column1, column2: column2}, function(data){
+                        $('#scatterplot').html(data);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

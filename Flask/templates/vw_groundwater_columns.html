@@ -1,0 +1,64 @@
+<!-- templates/table.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vw_groundwater Columns</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
+        <title>Groundwater Columns</title>
+    <style>
+        body {
+            display: flex;
+        }
+
+        #sidebar {
+            width: 200px;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        #content {
+            flex: 1;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Navigation</h2>
+        <ul>
+            {% for page in pages %}
+                <li><a href="{{ page.url }}">{{ page.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="container">
+        <h1 class="mt-5">Table Information</h1>
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>CID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>NotNull</th>
+                    <th>Default</th>
+                    <th>PK</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for column in columns_info %}
+                <tr>
+                    <td>{{ column[0] }}</td>
+                    <td>{{ column[1] }}</td>
+                    <td>{{ column[2] }}</td>
+                    <td>{{ column[3] }}</td>
+                    <td>{{ column[4] }}</td>
+                    <td>{{ column[5] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
