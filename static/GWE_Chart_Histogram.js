@@ -1,3 +1,4 @@
+// Function to generate site data
 function generateSiteData(selectedStation) {
   d3.json("https://data.cnra.ca.gov/api/3/action/datastore_search?resource_id=af157380-fb42-4abf-b72a-6f9f98868077&limit=47000")
     .then((data) => {
@@ -38,9 +39,11 @@ function generateLineChart(filteredResults, startDate, endDate) {
     return dateObj >= startDate && dateObj <= endDate;
     });
 
-    // Gets the msmt_date and gwe values
+    // Gets the msmt_date, gwe, wlm_qa_desc, and wlm_acc_desc values
     var msmtDate = filteredDates.map(date => date.msmt_date);
     var gweValues = filteredDates.map(date => date.gwe);
+    var wlm_qa_desc = filteredDates.map(date => date.wlm_qa_desc);
+    var wlm_acc_desc = filteredDates.map(date => date.wlm_acc_desc);
 
     // Builds the line chart
     var lineTrace = {
@@ -50,7 +53,9 @@ function generateLineChart(filteredResults, startDate, endDate) {
     'type': 'scatter',
     'name': 'GWE',
     'line': { width: 3, connectgaps: true },
-    'marker': { size: 7 }
+    'marker': { size: 7 },
+    'hoverinfo': 'text',
+    'text': filteredDates.map(date => `Measurement Quality: ${date.wlm_qa_desc}<br>Measurement Accuracy: ${date.wlm_acc_desc}<br>GWE: ${date.gwe}<br>Measurement Date: ${date.msmt_date}`)
     };
 
     var lineData = [lineTrace];
@@ -102,18 +107,20 @@ function generateStatsData(filteredResults){
   var gweMin = Math.min(...statsGweValues);
   var gweMedian = calculateMedian(statsGweValues);
   var gweAvg = calculateAverage(statsGweValues);
+  var gweStdDev = calculateStandardDeviation(statsGweValues);
 
   // Displays the statistics panel
   var statsPanel= d3.select('#stats-panel');
   statsPanel.html(
-    `<p><strong>All-Time High GWE:</strong> ${gweMax} feet</p>` +
-    `<p><strong>All-Time Low GWE:</strong> ${gweMin} feet</p>` +
-    `<p><strong>Median GWE:</strong> ${gweMedian} feet</p>` +
-    `<p><strong>Average GWE:</strong> ${gweAvg} feet</p>`
+    `<p>All-Time High GWE: ${gweMax} feet</p>` +
+    `<p>All-Time Low GWE: ${gweMin} feet</p>` +
+    `<p>Median GWE: ${gweMedian} feet</p>` +
+    `<p>Average GWE: ${gweAvg} feet</p>` +
+    `<p>Standard Deviation: ${gweStdDev}`
   );
 }
 
-// Function to calculate median
+// Function to calculate the median for gwe
 function calculateMedian(values) {
   values.sort((a, b) => a - b);
   var medianIndex = Math.floor(values.length / 2);
@@ -124,10 +131,18 @@ function calculateMedian(values) {
   }
 }
 
-// Function to calculate average
+// Function to calculate the average for gwe
 function calculateAverage(values) {
   var sum = values.reduce((total, value) => total + value, 0);
   return sum / values.length;
+}
+
+// Function to calculate the standard deviation for gwe
+function calculateStandardDeviation(values) {
+  const mean = calculateAverage(values);
+  const squaredDifferences = values.map(value => Math.pow(value - mean, 2));
+  const variance = calculateAverage(squaredDifferences);
+  return Math.sqrt(variance);
 }
 
 // Sets the dates variable to be accessed by the function below
