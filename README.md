@@ -15,7 +15,7 @@
 <p>Creating bar charts to visually represent groundwater level data, trends, and comparisons between different regions and time periods.</p>
 
 <h1>Instructions on How to Use and Interact with the Project</h1>
-<p>Details on how users can interact with the project will be provided here.</p>
+<p>All the charts and graphs are interactive, including drop-down list boxes and buttons.  Please look for these items and use appropirately.</p>
 
 <h1>Efforts for Ethical Considerations Made in the Project</h1>
 <p>In conducting the Groundwater Level Analysis across California, significant efforts were made to ensure ethical considerations were rigorously upheld throughout the research and analysis processes. Firstly, data integrity and accuracy were prioritized by using verified and reliable data from the California Natural Resources Agency. Secondly, the project adhered to principles of transparency and accountability, with methodologies and findings made accessible to the public to foster trust and facilitate independent verification.</p>
