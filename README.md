@@ -34,7 +34,6 @@
 <li>  measurements - csv file with measurment Data</li>
 <li>  perforations - csv file with preforations Data</li>
 <li>  stations - csv file with station data</li>
-<h2>Templates</h2>
+<h2>Templates (examples, but not all)</h2>
 <li>  404.html - contains the 404 page if the use enters a web page that does not exit</li>
 <li>  index.html - the homepage</li>
-<li>  scatter_plot.html - contains a scatter plot that takes in two columns and produces a graph</li>
