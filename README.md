@@ -26,15 +26,15 @@
 
 <h1>Folder Structure</h1>h1>
 <h2>Metadata</h2>
-##### DataDictionary_measurements.csv - data dictionary on groundwater measurements.
-##### DataDictionary_perforations.csv - data dictionary on groundwater perforations.
-##### DataDictionary_stations.csv - data dictionary on groundwater stations.
+<li> DataDictionary_measurements.csv - data dictionary on groundwater measurements.</li>
+<li> DataDictionary_perforations.csv - data dictionary on groundwater perforations.</li>
+<li> DataDictionary_stations.csv - data dictionary on groundwater stations.</li>
 <h2>Resources</h2>
-##### Groudwater.db - SQLLite database containing Groundwater tables and views
-##### measurements - csv file with measurment Data
-##### perforations - csv file with preforations Data
-##### stations - csv file with station data
+<li>  Groudwater.db - SQLLite database containing Groundwater tables and views</li>
+<li>  measurements - csv file with measurment Data</li>
+<li>  perforations - csv file with preforations Data</li>
+<li>  stations - csv file with station data</li>
 <h2>Templates</h2>
-##### 404.html - contains the 404 page if the use enters a web page that does not exit
-##### index.html - the homepage
-#### scatter_plot.html - contains a scatter plot that takes in two columns and produces a graph
+<li>  404.html - contains the 404 page if the use enters a web page that does not exit</li>
+<li>  index.html - the homepage</li>
+<li>  scatter_plot.html - contains a scatter plot that takes in two columns and produces a graph</li>
