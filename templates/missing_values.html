@@ -1,17 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Missing Values</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}Missing Values{% endblock %}
+
+{% block content %}
     <h1>Missing Values</h1>
-    <label id="missing_percent_change_gwe_label">
-        Missing Percent Change GWE: {{ missing_percent_change_gwe }}
-    </label>
-    <br>
-    <label id="page_missing_values_label">
-        Missing Percent Well Use: {{ missing_Percent_well_use }}
-    </label>
-</body>
-</html>
+    <p>Missing Percent Change GWE: {{ missing_percent_change_gwe }}</p>
+    <p>Missing Percent Well Use: {{ missing_Percent_well_use }}</p>
+{% endblock %}

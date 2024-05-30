@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Well Use Graphs{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 p-5 text-center bg-light">
+            <h1>Well Use Graphs</h1>
+            <p>Select a year range to see the data.</p>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card card-body bg-light">
+                <h6>Start Year:</h6>
+                <select id="startYear" onchange="updateGraphs()">
+                    {% for year in years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="card card-body bg-light">
+                <h6>End Year:</h6>
+                <select id="endYear" onchange="updateGraphs()">
+                    {% for year in years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="wellUseChart" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="gweChart" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+function updateGraphs() {
+    const startYear = document.getElementById('startYear').value;
+    const endYear = document.getElementById('endYear').value;
+
+    fetch(`/second_chart_data?year1=${startYear}&year2=${endYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const wellUseChart = document.getElementById('wellUseChart');
+            Plotly.newPlot(wellUseChart, [{
+                x: data.labels,
+                y: data.avg_gwe_year1,
+                type: 'bar',
+                name: startYear
+            }, {
+                x: data.labels,
+                y: data.avg_gwe_year2,
+                type: 'bar',
+                name: endYear
+            }], {
+                title: 'Average Groundwater Elevation by Well Use',
+                barmode: 'group'
+            });
+
+            const gweChart = document.getElementById('gweChart');
+            Plotly.newPlot(gweChart, [{
+                x: data.labels,
+                y: data.avg_gwe_year1.map((v, i) => data.avg_gwe_year2[i] - v),
+                type: 'bar',
+                name: 'Change'
+            }], {
+                title: 'Change in Groundwater Elevation',
+                barmode: 'group'
+            });
+        });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateGraphs();
+});
+</script>
+{% endblock %}
