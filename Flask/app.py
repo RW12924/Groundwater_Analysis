@@ -4,23 +4,73 @@ import matplotlib.pyplot as plt
 import io
 import base64
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
 pages = [
-    {'name': 'Home', 'url': '/'},
-    {'name': 'scatter_plot_avg_percent', 'url': '/Scatter_Plot_Average_Percent'},
-    {'name': 'Scatter Plot Query Groundwater View', 'url': '/Scatter_Plot_Groundwater_View_page'},
-    {'name': 'Data_Overview', 'url': '/Data_Overview'},
-    {'name': 'missing_values', 'url': '/missing_values'},
-    {'name': 'Dynamic Scatterplot', 'url': '/generate_scatterplot'},
-    {'name': 'Groundwater Maps', 'url': '/JavaScript'},
-    {'name': 'Combined_Data_Dictionaries', 'url': '/Combined_Data_Dictionaries'}
+    {'name': 'Home', 'url': '/'},  # Working
+    {'name': 'Combined Data Dictionaries', 'url': '/Combined_Data_Dictionaries'},  # Working
+    {'name': 'missing_values', 'url': '/missing_values'},  # CHECK DATA!!!
+    {'name': 'Well Use Graphs', 'url': '/well_use_graphs'},  # Working
+    {'name': 'GWE Chart Histogram', 'url': '/GWE_Chart_Histogram'},  # Working     
+    {'name': 'Dynamic Scatterplot', 'url': '/dynamic_scatter_plot'},  # Not working
+    {'name': 'CDW Dashboard', 'url': '/CDW_Dashboard'}  # Working
 ]
 
-db_path = os.path.join('Resources', 'Groundwater.db')
+
+db_path = os.path.join('../Resources', 'Groundwater.db')
 #db_path = os.path.join('../Resources', 'Groundwater.db')
+
+def get_db_tables():
+    conn = get_db_connection()
+    tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+    conn.close()
+    return [table['name'] for table in tables]
+
+# Retrieve data from Groundwater.db
+def get_well_use_counts():
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT well_use, COUNT(DISTINCT site_code) as count
+        FROM Stations
+        WHERE well_use != 'Unknown'
+        GROUP BY well_use
+    ''')
+    result = cursor.fetchall()
+    conn.close()
+    return result
+
+# Retrieve distinct years from Groundwater.db
+def get_years():
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT DISTINCT year
+        FROM tbl_groundwater
+        ORDER BY year
+    ''')
+    years = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return years
+
+# Retrieve data for the second chart from Groundwater.db
+def get_second_chart_data(year1, year2):
+    conn = sqlite3.connect(db_path)  # Ensure the correct path
+    query = '''
+        SELECT 
+            well_use, 
+            CASE WHEN year= ? THEN well_use_avg_gwe_per_year END as avg_gwe_year1,
+            CASE WHEN year = ? THEN well_use_avg_gwe_per_year END as avg_gwe_year2
+        FROM 
+            well_use_avg_gwe_per_year
+        WHERE 
+            well_use != 'Unknown'
+    '''
+    df = pd.read_sql_query(query, conn, params=(year1, year2))
+    conn.close()
+    return df
 
 def get_measurements_gwe_avg_percent_change_table():
     query = "SELECT * FROM measurements_gwe_avg_percent_change_table"
@@ -84,130 +134,37 @@ def data_dictionaries():
     conn.close()
     return data_dictionary_info
 
+def get_db_connection():
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 @app.route('/')
 def index():
     return render_template('index.html', pages=pages)
 
-@app.route('/JavaScript')
-def JavaScript():
-    # Query the data from the database instead of reading from CSV
-    #df = query_vw_groundwater()
-    df = query_tbl_groundwater()
-    # Extract the year for each object from the DataFrame
-    years = df['year']
-    # Return the HTML template with the years parameter
-    return render_template('JavaScript.html', years=years)
+@app.route('/GWE_Chart_Histogram')
+def GWE_Chart_Histogram():
+    return render_template('GWE_Chart_Histogram.html', pages=pages)
 
-@app.route('/data')
-def data():
-    try:
-        # Query the data from the database
-        df = query_vw_groundwater()
-        # Convert the DataFrame to a CSV string
-        csv_data = df.to_csv(index=False)
-        # Return the CSV data as a response
-        return csv_data, 200, {'Content-Type': 'text/csv'}
-    except Exception as e:
-        app.logger.error(f"Error fetching data: {e}")
-        return "Error fetching data", 500
-
-@app.route('/Data_Overview')
-def Data_Overview():
-    return render_template('Data_Overview.html', pages=pages)
+@app.route('/CDW_Dashboard')
+def CDW_Dashboard():
+    return render_template('CDW_Dashboard.html', pages=pages)
 
 @app.route('/Combined_Data_Dictionaries')
 def combined_data_dictionaries():
-    data_dictionary_info = data_dictionaries()  # Assuming you have a function to fetch data
-    if isinstance(data_dictionary_info, tuple):
-        # Assuming the first item of the tuple is the actual data you want
-        data_dictionary_info = data_dictionary_info[0]
+    data_dictionary_info = data_dictionaries()
     return render_template('Combined_Data_Dictionaries.html', data_dictionary_info=data_dictionary_info, pages=pages)
-
-@app.route('/Scatter_Plot_Average_Percent', methods=['GET', 'POST'])
-def scatter_plot_page():
-    plot_url = None
-    x_column_name = None
-    y_column_name = None
-    if request.method == 'POST':
-        x_column_name = request.form.get('x_column')
-        y_column_name = request.form.get('y_column')
-        
-        if not x_column_name or not y_column_name:
-            return "Error: Both columns must be specified.", 400
-        
-        plot_data = get_measurements_gwe_avg_percent_change_table()
-        
-        if x_column_name not in plot_data.columns or y_column_name not in plot_data.columns:
-            return "Error: Specified columns not found in the data.", 400
-
-        x_data = plot_data[x_column_name]
-        y_data = plot_data[y_column_name]
-
-        plt.figure(figsize=(10, 6))
-        plt.scatter(x_data, y_data)
-        plt.xlabel(x_column_name)
-        plt.ylabel(y_column_name)
-        plt.title(f'Scatter Plot of {x_column_name} vs {y_column_name}')
-        
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        buf.seek(0)
-        plot_url = base64.b64encode(buf.getvalue()).decode('utf8')
-        plt.close()
-
-    return render_template('Scatter_Plot_Average_Percent.html', plot=plot_url, x_column=x_column_name, y_column=y_column_name, pages=pages)
-
-@app.route('/Scatter_Plot_Groundwater_View_page', methods=['GET', 'POST'])
-def Scatter_Plot_Groundwater_View_page():
-    plot_url = None
-    x_column_name = None
-    y_column_name = None
-    if request.method == 'POST':
-        x_column_name = request.form.get('x_column')
-        y_column_name = request.form.get('y_column')
-        
-        if not x_column_name or not y_column_name:
-            return "Error: Both columns must be specified.", 400
-        
-        plot_data = query_vw_groundwater()
-        
-        if x_column_name not in plot_data.columns or y_column_name not in plot_data.columns:
-            return "Error: Specified columns not found in the data.", 400
-
-        x_data = plot_data[x_column_name]
-        y_data = plot_data[y_column_name]
-
-        plt.figure(figsize=(10, 6))
-        plt.scatter(x_data, y_data)
-        plt.xlabel(x_column_name)
-        plt.ylabel(y_column_name)
-        plt.title(f'Scatter Plot of {x_column_name} vs {y_column_name}')
-        
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        buf.seek(0)
-        plot_url = base64.b64encode(buf.getvalue()).decode('utf8')
-        plt.close()
-
-    return render_template('Scatter_Plot_Groundwater_View.html', plot=plot_url, x_column=x_column_name, y_column=y_column_name, pages=pages)
-
 
 @app.route('/missing_values', methods=['GET', 'POST'])
 def missing_values():
-    # Assuming these functions return the values you want to pass to the template
     missing_percent_change_gwe = get_missing_percent_change_gwe()
     missing_Percent_well_use = get_missing_Percent_well_use()
-    
-    # Pass the values to the template
     return render_template('missing_values.html', 
+                           pages=pages,
                            missing_percent_change_gwe=str(int(missing_percent_change_gwe)) + '%', 
-                           missing_Percent_well_use = str(int(missing_Percent_well_use)) + '%')
-
-
-def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+                           missing_Percent_well_use=str(int(missing_Percent_well_use)) + '%')
 
 @app.route('/groundwater_scatter_plot')
 def groundwater_scatter_plot():
@@ -225,6 +182,14 @@ def get_columns():
     conn.close()
     columns = [column['name'] for column in columns]
     return jsonify(columns)
+
+@app.route('/dynamic_scatter_plot', methods=['GET'])
+def dynamic_scatter_plot():
+    conn = get_db_connection()
+    tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+    conn.close()
+    tables = [table['name'] for table in tables]
+    return render_template('dynamic_scatter_plot.html', tables=tables, pages=pages)
 
 @app.route('/generate_scatterplot', methods=['POST'])
 def generate_scatterplot():
@@ -251,14 +216,39 @@ def generate_scatterplot():
     plot_url = base64.b64encode(img.getvalue()).decode()
     plt.close()
     
-    return render_template('scatter_plot.html', plot_url=plot_url, tables=get_db_tables())
+    return jsonify({'plot_url': f'data:image/png;base64,{plot_url}'})
 
-def get_db_tables():
-    conn = get_db_connection()
-    tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
-    conn.close()
-    return [table['name'] for table in tables]
+@app.route('/data')
+def data():
+    well_use_counts = get_well_use_counts()
+    data = {'labels': [], 'counts': []}
+    for row in well_use_counts:
+        data['labels'].append(row[0])
+        data['counts'].append(row[1])
+    return jsonify(data)
 
+@app.route('/second_chart_data')
+def second_chart_data():
+    year1 = request.args.get('year1')
+    year2 = request.args.get('year2')
+    if not year1 or not year2:
+        return jsonify({'error': 'Both year1 and year2 are required'}), 400
+    df = get_second_chart_data(year1, year2)
+    grouped_df = df.groupby('well_use').agg({
+        'avg_gwe_year1': 'first',
+        'avg_gwe_year2': 'first'
+    }).reset_index()
+    data = {
+        'labels': grouped_df['well_use'].tolist(),
+        'avg_gwe_year1': grouped_df['avg_gwe_year1'].fillna(0).tolist(),
+        'avg_gwe_year2': grouped_df['avg_gwe_year2'].fillna(0).tolist()
+    }
+    return jsonify(data)
+
+@app.route('/well_use_graphs')
+def well_use_graphs():
+    years = get_years()
+    return render_template('well_use_graphs.html', pages=pages, years=years)
 
 @app.errorhandler(404)
 def page_not_found(error):
