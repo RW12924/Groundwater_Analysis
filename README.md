@@ -24,7 +24,7 @@
 <p>The data for this project is obtained from the California Natural Resources Agency's Periodic Groundwater Level Measurements dataset.</p>
 
 
-<h1>Folder Structure</h1>h1>
+<h1>Folder Structure</h1>
 <h2>Metadata</h2>
 <li> DataDictionary_measurements.csv - data dictionary on groundwater measurements.</li>
 <li> DataDictionary_perforations.csv - data dictionary on groundwater perforations.</li>
